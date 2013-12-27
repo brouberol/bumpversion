@@ -111,7 +111,24 @@ Options
 
   Template specifying how to serialize the version parts to a version string again.
 
-  This is templated using the `Python Format String Syntax <http://docs.python.org/2/library/string.html#format-string-syntax>`_. Available in the template context are parsed values of the named groups specified in ``--parse`` as well as all environment variables (prefixed with ``$``).
+  Can be specified multiple times (like ``--serialize {major}.{minor}
+  --serialize {major}`` on the command line or like
+
+  ::
+    serialize =
+      {major}.{minor}
+      {major}
+
+  on the command line). Bumpversion will attempt to serialize the new version
+  using the first format until all options are successful or an invalid
+  serialization is found. The chosen format is then the last successful
+  attempt.
+
+  This is templated using the `Python Format String Syntax
+  <http://docs.python.org/2/library/string.html#format-string-syntax>`_.
+  Available in the template context are parsed values of the named groups
+  specified in ``--parse`` as well as all environment variables (prefixed with
+  ``$``).
 
 ``(--tag | --no-tag)`` / ``tag = (True | False)``
   **default:** `Don't create a tag`
