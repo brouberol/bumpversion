@@ -202,7 +202,8 @@ class VersionPart(object):
         self._value = "0"
 
 class IncompleteVersionRepresenationException(Exception):
-    pass
+    def __init__(self, message):
+        self.message = message
 
 class Version(object):
 
