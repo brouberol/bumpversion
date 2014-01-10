@@ -727,3 +727,24 @@ def test_multiple_serialize_twopart_patch(tmpdir):
 
     assert '0.7.1' == tmpdir.join("fileC").read()
 
+
+def test_multiple_serialize_twopart_patch_configfile(tmpdir):
+    tmpdir.join("fileD").write("0.6")
+    tmpdir.chdir()
+
+    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+files = fileD
+current_version = 0.6
+serialize =
+  {major}.{minor}.{patch}
+  {major}.{minor}
+parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
+""")
+
+    main(['patch'])
+
+    assert '0.6.1' == tmpdir.join("fileD").read()
+
+
+
+

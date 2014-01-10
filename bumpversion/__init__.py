@@ -34,6 +34,22 @@ DESCRIPTION = 'Bumpversion: v{} (using Python v{})'.format(
     sys.version.split("\n")[0].split(" ")[0],
 )
 
+from argparse import _AppendAction
+class DiscardDefaultIfSpecifiedAppendAction(_AppendAction):
+
+    '''
+    Fixes bug http://bugs.python.org/issue16399 for 'append' action
+    '''
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        warnings.warn("{}".format(locals()))
+        if getattr(self, "_discarded_default", None) is None:
+            setattr(namespace, self.dest, [])
+            self._discarded_default = True
+
+        super(DiscardDefaultIfSpecifiedAppendAction, self).__call__(
+                parser, namespace, values, option_string=None)
+
 class BaseVCS(object):
 
     @classmethod
@@ -278,6 +294,8 @@ class Version(object):
 
     def _choose_serialize_format(self):
 
+        warnings.warn("Trying the following serialization formats: {}".format(self.serialize_formats))
+
         chosen = None
 
         for serialize_format in self.serialize_formats:
@@ -393,22 +411,20 @@ def main(original_args=None):
             known_args.config_file))
 
     parser2 = argparse.ArgumentParser(add_help=False, parents=[parser1])
+
     parser2.set_defaults(**defaults)
 
     parser2.add_argument('--current-version', metavar='VERSION',
                          help='Version that needs to be updated', required=False)
     parser2.add_argument('--parse', metavar='REGEX',
                          help='Regex parsing the version string',
-                         default='(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)')
-    parser2.add_argument('--serialize', metavar='FORMAT', action="append",
+                         default=defaults.get("parse", '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'))
+    parser2.add_argument('--serialize', metavar='FORMAT',
+                         action=DiscardDefaultIfSpecifiedAppendAction,
                          help='How to format what is parsed back to a version',
-                         default=[str('{major}.{minor}.{patch}')])
+                         default=defaults.get("serialize", [str('{major}.{minor}.{patch}')]))
 
     known_args, remaining_argv = parser2.parse_known_args(args)
-
-    if known_args.serialize and len(known_args.serialize) > 1:
-        # http://bugs.python.org/issue16399
-        known_args.serialize = known_args.serialize[1:]
 
     defaults.update(vars(known_args))
 
